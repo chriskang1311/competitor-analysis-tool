@@ -1,6 +1,7 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { buildDiscoveryPrompt } from "../prompts.js";
 import { DiscoveryResultSchema } from "../schemas.js";
+import { tavilyMultiSearch } from "../lib/tavily.js";
 import type { CompetitorCard } from "../types.js";
 
 export async function runDiscovery(
@@ -9,7 +10,19 @@ export async function runDiscovery(
   category: string,
   onProgress?: (text: string) => void
 ): Promise<CompetitorCard[]> {
-  const prompt = buildDiscoveryPrompt(productName, productDescription, category);
+  // Pre-fetch competitor landscape with Tavily
+  let tavilyContext: string | undefined;
+  if (process.env.TAVILY_API_KEY) {
+    onProgress?.(`🌐 Pre-fetching competitor landscape with Tavily…`);
+    tavilyContext = await tavilyMultiSearch([
+      `top ${category} healthcare software vendors 2024`,
+      `${productName} competitors alternatives`,
+      `best ${category} solutions KLAS G2 healthcare`,
+    ]);
+    onProgress?.(`✅ Tavily seeded ${tavilyContext ? "results" : "nothing"} — starting discovery agent`);
+  }
+
+  const prompt = buildDiscoveryPrompt(productName, productDescription, category, tavilyContext);
   let resultText = "";
 
   for await (const event of query({

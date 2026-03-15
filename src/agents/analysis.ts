@@ -1,6 +1,7 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { buildSingleCompetitorAnalysisPrompt, CATEGORY_FEATURE_HINTS } from "../prompts.js";
 import { CompetitorAnalysisSchema } from "../schemas.js";
+import { tavilyMultiSearch } from "../lib/tavily.js";
 import type { ValidatedCompetitor, CompetitorAnalysis } from "../types.js";
 
 export async function runCompetitorAnalysis(
@@ -10,7 +11,18 @@ export async function runCompetitorAnalysis(
   onProgress?: (text: string) => void
 ): Promise<CompetitorAnalysis> {
   const featureHints = CATEGORY_FEATURE_HINTS[category] ?? [];
-  const prompt = buildSingleCompetitorAnalysisPrompt(productName, category, competitor, featureHints);
+
+  // Pre-fetch competitor-specific data with Tavily
+  let tavilyContext: string | undefined;
+  if (process.env.TAVILY_API_KEY) {
+    onProgress?.(`[${competitor.name}] 🌐 Tavily pre-fetch…`);
+    tavilyContext = await tavilyMultiSearch([
+      `${competitor.name} ${category} features pricing`,
+      `${competitor.name} G2 reviews healthcare`,
+    ]);
+  }
+
+  const prompt = buildSingleCompetitorAnalysisPrompt(productName, category, competitor, featureHints, tavilyContext);
   let resultText = "";
 
   for await (const event of query({

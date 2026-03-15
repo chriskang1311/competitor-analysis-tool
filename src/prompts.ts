@@ -102,17 +102,25 @@ export const CATEGORY_FEATURE_HINTS: Record<string, string[]> = {
 export function buildDiscoveryPrompt(
   productName: string,
   productDescription: string,
-  category: string
+  category: string,
+  tavilyContext?: string
 ): string {
+  const tavilySection = tavilyContext
+    ? `\nPRE-FETCHED SEARCH RESULTS (use these as your primary source — do not repeat these searches):\n${tavilyContext}\n`
+    : "";
+
+  const searchInstruction = tavilyContext
+    ? `1. The pre-fetched results above are your starting point — extract competitors from them first\n2. Use WebSearch only to fill gaps or verify details not covered above`
+    : `1. Search for competitors using queries like: "best ${category} software healthcare", "top ${category} solutions", "${productName} alternatives", "${category} vendors KLAS"\n2. Check G2, Capterra, KLAS Research, Black Book Research, and vendor websites`;
+
   return `You are a healthcare technology competitive intelligence analyst. Your task is to identify the top 10 direct competitors to the product described below.
 
 PRODUCT: ${productName}
 DESCRIPTION: ${productDescription}
 CATEGORY: ${category}
-
+${tavilySection}
 INSTRUCTIONS:
-1. Search for competitors using queries like: "best ${category} software healthcare", "top ${category} solutions", "${productName} alternatives", "${category} vendors KLAS"
-2. Check G2, Capterra, KLAS Research, Black Book Research, and vendor websites
+${searchInstruction}
 3. A competitor must be a DIRECT competitor — same category, same buyer (health systems, hospitals, or physician groups)
 4. Do NOT include consulting firms, staffing companies, or tangentially related products
 5. For each competitor, capture:
@@ -198,9 +206,18 @@ export function buildSingleCompetitorAnalysisPrompt(
   productName: string,
   category: string,
   competitor: ValidatedCompetitor,
-  featureHints: string[]
+  featureHints: string[],
+  tavilyContext?: string
 ): string {
   const featureList = featureHints.map((f, i) => `${i + 1}. ${f}`).join("\n");
+
+  const tavilySection = tavilyContext
+    ? `\nPRE-FETCHED SEARCH RESULTS FOR ${competitor.name.toUpperCase()} (use these as your primary source):\n${tavilyContext}\n`
+    : "";
+
+  const searchInstruction = tavilyContext
+    ? `1. The pre-fetched results above are your primary source — extract feature evidence from them first\n2. Visit ${competitor.website} and use WebSearch only to fill gaps not covered above`
+    : `1. Visit ${competitor.website} — explore the product pages, feature lists, and integrations\n2. Search for "${competitor.name} features", "${competitor.name} ${category}", "${competitor.name} G2 reviews", "${competitor.name} KLAS"`;
 
   return `You are a healthcare technology analyst conducting a deep competitive analysis of ONE specific product.
 
@@ -208,13 +225,12 @@ YOUR SUBJECT: ${competitor.name} by ${competitor.company}
 WEBSITE: ${competitor.website}
 
 CONTEXT: You are analyzing this product as a competitor to ${productName} in the ${category} category.
-
+${tavilySection}
 FEATURE DIMENSIONS TO EVALUATE:
 ${featureList}
 
 INSTRUCTIONS:
-1. Visit ${competitor.website} — explore the product pages, feature lists, and integrations
-2. Search for "${competitor.name} features", "${competitor.name} ${category}", "${competitor.name} G2 reviews", "${competitor.name} KLAS"
+${searchInstruction}
 3. For each feature dimension above, determine:
    - "Yes" — product clearly supports this
    - "Partial" — product has limited or partial support
