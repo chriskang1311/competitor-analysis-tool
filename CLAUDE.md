@@ -1,157 +1,147 @@
-# Claude Workflow Builder
+# Competitor Analysis Tool — Claude Code Instructions
 
-## Role
+## What This Tool Does
+This is a multi-agent healthcare technology competitive intelligence tool. When a user asks you to analyze competitors for a product, you orchestrate a pipeline of specialist AI agents that:
 
-You are an automation builder for complete beginners. Users will describe a process they want
-automated — often vaguely. Your job is to research, clarify, plan, build, and deploy working
-TypeScript automations in Trigger.dev. The user needs zero prior knowledge; guide them through
-every step.
+1. **Discover** the top competitors in the space (Discovery Agent)
+2. **Validate** and score each competitor with confidence ratings (Validator Agent)
+3. **Analyze** selected competitors in parallel — one dedicated agent per competitor (Analysis Agents)
+4. **Synthesize** a full report with citations (Synthesis Agent)
 
-## Workflow — Always follow this exact order
+Results are saved to `reports/` as JSON + Markdown. Open `.md` files with `Ctrl+Shift+V` in VSCode for formatted preview.
 
-1. **Understand** — Listen to the idea. Do not write any code yet.
-2. **Research** — Identify the best APIs/services. Check docs, pricing, rate limits, free tiers,
-   and authentication requirements.
-3. **Clarify** — Ask the user targeted questions (see below). Do not assume anything.
-4. **Plan** — Write out what you will build in plain English. Get explicit approval before coding.
-5. **Build** — Create TypeScript task files following the conventions below.
-6. **Environment Setup** — Add all required env vars to `.env` (local) AND the Trigger.dev
-   dashboard (production). Walk the user through both.
-7. **Test Locally** — Start the dev server and trigger a test run. Confirm it works.
-8. **Deploy** — Use the Trigger.dev MCP deploy tool to push to production.
-9. **Verify** — Check run logs and confirm the automation is working end-to-end.
+---
 
-## Questions to Ask Before Writing Any Code
+## Triggering an Analysis
 
-- **Source**: What data or service does this pull from? Does the user have an account/API key?
-- **Output**: Where should results go? (ClickUp, email, Slack, a spreadsheet, a database?)
-- **Frequency**: Run on a schedule (every hour, daily), respond to an event, or trigger manually?
-- **Accounts**: What services does the user already have access to? What needs to be signed up for?
-- **Success**: What does "working" look like? What exact output should they see?
-- **Edge cases**: What if the source has no new data? What if an API call fails?
+Respond to any of these (and similar phrasings):
+- "Analyze competitors for [product]"
+- "Run competitor analysis on [product]"
+- "Research competitors for [product name]"
+- "Who are the competitors to [product]?"
+- "Do a competitive analysis of [market/product]"
 
-## Tech Stack
+---
 
-- **Language**: TypeScript only — no Python scripts, no shell scripts, no exceptions
-- **Runtime**: All code runs as Trigger.dev tasks — never plain Node scripts run directly
-- **HTTP requests**: Use native `fetch` — no need for axios or node-fetch
+## The 7 Healthcare Product Categories
 
-## Project Structure
+When the user mentions a product, identify which category it belongs to. If unclear, ask:
 
-```
-src/trigger/{automation-name}/
-  {task-name}.ts    ← simple automations can live in a single file
-  {check-task}.ts   ← or split when there is a detection phase...
-  {process-task}.ts ← ...and a separate heavy-processing phase
-```
-
-- Each automation gets its own folder under `src/trigger/`
-- A single task file is fine for simple automations
-- Split into multiple files when one task detects/polls for new items and another does the heavy work (API calls, LLM, posting output) — see `/trigger-ref` for the orchestrator+processor pattern
-
-## Environment Variables — Security Rules
-
-- **Every secret lives in `.env`** — API keys, tokens, workspace IDs, channel IDs. No exceptions.
-- **Never log secret values** — `console.log("Key:", apiKey)` is a security violation
-- **Never hardcode credentials** — not even temporarily, not even in comments
-- **Always validate at the top of every task**:
-  ```ts
-  const apiKey = process.env.MY_API_KEY;
-  if (!apiKey) throw new Error("MY_API_KEY is not set");
-  ```
-- **IDs and tokens from third-party services** (workspace IDs, channel IDs, etc.) — always read from env vars, never hardcode or fetch dynamically when a static value will do
-- **Before deploying**: add ALL env vars to Trigger.dev dashboard → Project → Environment
-  Variables. Add to both staging and prod environments. This is the #1 cause of production failures.
-- **Verify `.gitignore` includes `.env`** before any commit. Never commit secrets.
-- **When adding a new env var**: add it to `.env` with a descriptive comment explaining where to
-  get it, then remind the user to also add it to the Trigger.dev dashboard
-
-## Trigger.dev Critical Rules
-
-- Use `@trigger.dev/sdk` — NEVER `client.defineJob` (v2 pattern, breaks everything)
-- Scheduled tasks use `schedules.task` with a `cron` string — always ask the user what frequency
-- `triggerAndWait()` returns a `Result` object — always check `result.ok` before `result.output`
-- NEVER wrap `triggerAndWait`, `batchTriggerAndWait`, or `wait.*` calls in `Promise.all`
-- Use `idempotencyKey` when the same item could be triggered more than once (prevents duplicates)
-- Waits longer than 5 seconds are auto-checkpointed and do not count against compute usage
-- TypeScript imports between task files need `.js` extension: `import { myTask } from "./my-task.js"`
-
-## Scheduling
-
-Always ask the user what frequency they want before choosing a cron. Common cron patterns:
-
-| Schedule | Cron |
+| Category ID | Label |
 |---|---|
-| Every 30 minutes | `"*/30 * * * *"` |
-| Every hour | `"0 * * * *"` |
-| Every 8 hours | `"0 */8 * * *"` |
-| 9am daily | `"0 9 * * *"` |
-| Every Monday 8am | `"0 8 * * 1"` |
+| `revenue-cycle-management` | Revenue Cycle Management |
+| `contracting-strategy-yield` | Contracting Strategy & Yield |
+| `supply-chain-pharmacy` | Supply Chain & Pharmacy |
+| `care-model-operations` | Care Model Operations |
+| `clinical-decision-support` | Clinical Decision Support |
+| `patient-engagement` | Patient Engagement |
+| `clinical-applications` | Clinical Applications |
 
-When polling a feed on a schedule, set the lookback window slightly larger than the cron interval
-(e.g., 25 hours for a daily cron) to avoid missing items at the boundary between runs.
+---
 
-## MCP Tools — Use These Instead of CLI When Possible
+## Step-by-Step Workflow
 
-You have live Trigger.dev MCP tools. Prefer them over running CLI commands in the terminal:
+### Step 1 — Collect Information
+Before running anything, make sure you have:
+- **Product name** (e.g. "Epic MyChart")
+- **Product description** (1-3 sentences about what it does and who uses it)
+- **Category** (one of the 7 IDs above)
 
-| What you need to do | MCP Tool |
-|---|---|
-| Deploy to production | `mcp__trigger__deploy` |
-| Fire a test run | `mcp__trigger__trigger_task` |
-| Wait for a run to finish | `mcp__trigger__wait_for_run_to_complete` |
-| Read run logs and errors | `mcp__trigger__get_run_details` |
-| List recent runs | `mcp__trigger__list_runs` |
-| See all registered tasks | `mcp__trigger__get_current_worker` |
+If the user hasn't provided all three, ask for them before proceeding.
 
-## Testing Locally
-
-1. Start the dev server: `npx trigger.dev@latest dev`
-2. Use `mcp__trigger__trigger_task` to fire a test run with a sample payload
-3. Watch logs in the terminal — errors appear here in real time
-4. Use `mcp__trigger__get_run_details` to inspect the full run trace if something fails
-
-## Deploying to Production
-
-**NEVER push to production or deploy without explicit user approval.** After testing locally,
-always ask the user to confirm the automation is working before committing, pushing, or deploying.
-Wait for the user to say "push it", "deploy", "ship it", or similar before touching production.
-
-**Checklist — complete this before every deploy:**
-
-- [ ] All env vars added to Trigger.dev dashboard (not just `.env`)
-  - Go to: cloud.trigger.dev → your project → Environment Variables
-  - Add every key to both staging and prod
-- [ ] Tested locally and at least one run succeeded
-- [ ] **User has explicitly confirmed** the automation works and approved the deploy
-- [ ] `.env` is in `.gitignore`
-
-**Deploy**: push to `master` — GitHub Actions auto-deploys via `.github/workflows/deploy.yml`
-
-**After deploying:**
-- Use `mcp__trigger__list_runs` to confirm the first run succeeded
-- For scheduled tasks: check the Schedules tab in the dashboard to confirm the cron is registered
-- Do a manual test trigger from the dashboard or via `mcp__trigger__trigger_task`
-
-## When a Run Fails
-
-1. Use `mcp__trigger__get_run_details` to read the full error message and trace
-2. Most common causes:
-   - **Missing env var in dashboard** — key is in `.env` locally but was never added to Trigger.dev
-   - **Import path** — TypeScript task imports need `.js` extension (e.g., `"./process-video.js"`)
-   - **API auth failure** — wrong key format, expired key, or wrong header name for that API
-3. Fix the issue, test locally again, then redeploy
-
-## Adding npm Packages
-
+### Step 2 — Run Phase 1: Discovery + Validation
 ```bash
-npm install {package-name}
-npm install -D @types/{package-name}   # only if the package doesn't bundle its own types
+node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts \
+  --phase discover \
+  --name "PRODUCT NAME" \
+  --description "PRODUCT DESCRIPTION" \
+  --category "CATEGORY-ID"
 ```
 
-Trigger.dev bundles `node_modules` automatically on every deploy — no extra config needed.
+This runs two agents sequentially:
+- **Discovery Agent** (~5 min): Finds top 10 competitors via web search
+- **Validator Agent** (~3 min): Scores each competitor and ★ marks the top 5
 
-## Full Trigger.dev API Reference
+The output will print a numbered list like:
+```
+  ★ 1. Competitor A (Company X) [High  ]
+     Direct competitor with identical buyer profile.
+     → Must-analyze because it leads the KLAS rankings in this space.
 
-Use `/trigger-ref` for complete code examples: task patterns, schedules, waits, triggerAndWait,
-batch triggers, debounce, and schema tasks with Zod validation.
+    2. Competitor B (Company Y) [Medium]
+     Overlaps on 3 of 5 key features but targets a different buyer.
+```
+
+### Step 3 — Ask the User Which Competitors to Analyze
+After showing the list, tell the user:
+
+> "Discovery is complete. I found [N] competitors. The ★ starred ones are recommended by the validator. Which would you like to deep-analyze? You can say:
+> - **'use starred'** — analyze the ★ recommended ones
+> - **'1, 3, 5, 7'** — specify by number
+> - **'all'** — analyze all of them (slower)"
+
+### Step 4 — Run Phase 2: Deep Analysis + Synthesis
+
+Once the user responds, run:
+```bash
+node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts \
+  --phase analyze \
+  --name "PRODUCT NAME" \
+  --description "PRODUCT DESCRIPTION" \
+  --category "CATEGORY-ID" \
+  --select "SELECTION" \
+  --session "reports/SLUG/session.json"
+```
+
+Replace `SELECTION` with:
+- `"starred"` if user said "use starred"
+- `"1,3,5"` if user gave numbers
+- `"all"` if user said all
+
+The `--session` path uses the slug printed during Phase 1 (e.g. `reports/epic-mychart-2026-03-15/session.json`).
+
+Analysis agents run **in parallel** — one per competitor — then the Synthesis Agent merges everything.
+
+### Step 5 — Show Results
+After Phase 2 completes, the terminal prints the executive summary. Relay it to the user in chat, then say:
+
+> "The full report is saved at `reports/[slug]/report.md`. Open it in VSCode and press `Ctrl+Shift+V` (Mac: `Cmd+Shift+V`) for the formatted feature matrix and citations."
+
+---
+
+## Resuming a Previous Session
+
+If Phase 1 already ran, skip it by pointing to the existing session file:
+```bash
+node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts \
+  --phase analyze \
+  --name "..." --description "..." --category "..." \
+  --select "starred" \
+  --session "reports/epic-mychart-2026-03-15/session.json"
+```
+
+List previous sessions:
+```bash
+ls reports/
+```
+
+---
+
+## Environment Setup
+
+Requires `ANTHROPIC_API_KEY` in a `.env` file at the project root:
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+---
+
+## Troubleshooting
+
+| Error | Fix |
+|---|---|
+| `Missing required argument` | Ensure `--phase`, `--name`, `--description`, `--category` are all provided |
+| `Cannot find module` | Run `npm install` in the project root |
+| `ANTHROPIC_API_KEY` error | Check `.env` exists with a valid key |
+| `Run --phase discover first` | Phase 1 hasn't completed — run discover before analyze |
+| JSON parse error | AI returned malformed JSON — retry the same command |

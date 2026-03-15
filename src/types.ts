@@ -1,30 +1,4 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { Request } from "express";
-
-export interface SourceLink {
-  url: string;
-  description: string;
-}
-
-export interface CompetitorProfile {
-  name: string;
-  company: string;
-  description: string;
-  targetUser: string;
-  sources: SourceLink[];
-}
-
-export interface AnalysisResult {
-  productName: string;
-  generatedAt: string;
-  markdown: string;
-}
-
-export interface AnalysisEvent {
-  type: "progress" | "result" | "error";
-  text: string;
-  data?: unknown;
-}
+// ── Core competitor types ────────────────────────────────────────
 
 export interface CompetitorCard {
   id: string;
@@ -36,6 +10,29 @@ export interface CompetitorCard {
   keyStrength: string;
 }
 
+export interface ValidatedCompetitor extends CompetitorCard {
+  confidence: "High" | "Medium" | "Low";
+  validatorNotes: string;
+  recommended: boolean;
+  recommendationReason: string;
+}
+
+// ── Analysis types ───────────────────────────────────────────────
+
+export interface Evidence {
+  feature: string;
+  claim: string;
+  url: string;
+}
+
+export interface CompetitorAnalysis {
+  id: string;
+  name: string;
+  company: string;
+  values: Record<string, string>;
+  evidence: Evidence[];
+}
+
 export interface ComparisonTable {
   features: string[];
   competitors: Array<{
@@ -45,7 +42,38 @@ export interface ComparisonTable {
   }>;
 }
 
-export interface AuthRequest extends Request {
-  user: User;
-  db: SupabaseClient;
+// ── Synthesis report ─────────────────────────────────────────────
+
+export interface SynthesisReport {
+  productName: string;
+  category: string;
+  generatedAt: string;
+  executiveSummary: string[];
+  topDifferentiators: Array<{ title: string; description: string }>;
+  tableStakes: string[];
+  whitespaceOpportunities: string[];
+  comparisonTable: ComparisonTable;
+  sources: Array<{ competitor: string; feature: string; claim: string; url: string }>;
 }
+
+// ── Session state ────────────────────────────────────────────────
+
+export interface SessionState {
+  productName: string;
+  productDescription: string;
+  category: string;
+  slug: string;
+  createdAt: string;
+  phases: {
+    discover?: "done" | "error";
+    analyze?: "done" | "error";
+  };
+  selectedCompetitorIndices?: number[];
+}
+
+// ── Agent event (for console streaming) ─────────────────────────
+
+export type AgentEvent =
+  | { type: "progress"; text: string }
+  | { type: "result"; data: unknown }
+  | { type: "error"; text: string };
