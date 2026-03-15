@@ -1,184 +1,145 @@
-import { useState } from "react";
-import AnalysisForm from "./components/AnalysisForm";
-import ResearchPhases from "./components/ResearchPhases";
-import ReportView from "./components/ReportView";
-import HistorySidebar from "./components/HistorySidebar";
+import { useState, useEffect } from "react";
+import { supabase } from "./lib/supabase";
+import type { Session } from "@supabase/supabase-js";
+import LoginPage from "./components/LoginPage";
+import CategoryNav from "./components/CategoryNav";
+import ProductList from "./components/ProductList";
+import ProductPage from "./components/ProductPage";
+import RunningJobBanner from "./components/RunningJobBanner";
 
-export type Status = "idle" | "running" | "done" | "error";
+type View = "home" | "product";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+interface ProductRef {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+}
+
+interface RunningJob {
+  productId: string;
+  productName: string;
+  type: "discovery" | "analysis";
+}
 
 export default function App() {
-  // Form state
-  const [productName, setProductName] = useState("");
-  const [productDescription, setProductDescription] = useState("");
-  const [maxCompetitors, setMaxCompetitors] = useState(5);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [view, setView] = useState<View>("home");
+  const [selectedCategory, setSelectedCategory] = useState("revenue-cycle-management");
+  const [selectedProduct, setSelectedProduct] = useState<ProductRef | null>(null);
+  const [productListRefresh, setProductListRefresh] = useState(0);
+  const [runningJobs, setRunningJobs] = useState<RunningJob[]>([]);
 
-  // Analysis state
-  const [status, setStatus] = useState<Status>("idle");
-  const [progressItems, setProgressItems] = useState<string[]>([]);
-  const [report, setReport] = useState("");
-  const [reportProductName, setReportProductName] = useState("");
-  const [errorText, setErrorText] = useState("");
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  // Sidebar/history state
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [sidebarRefresh, setSidebarRefresh] = useState(0);
-
-  async function startAnalysis() {
-    if (!productName.trim() || !productDescription.trim()) {
-      alert("Please fill in both the product name and description.");
-      return;
-    }
-
-    setStatus("running");
-    setProgressItems(["Starting research…"]);
-    setReport("");
-    setErrorText("");
-    setSelectedId(null);
-    setReportProductName(productName);
-
-    let buffer = "";
-
-    try {
-      const response = await fetch(`${API_URL}/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productName, productDescription, maxCompetitors }),
-      });
-
-      if (!response.ok || !response.body) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const payload = line.slice(6);
-          if (payload === "[DONE]") break;
-
-          let event: { type: string; text: string };
-          try { event = JSON.parse(payload); } catch { continue; }
-
-          if (event.type === "progress") {
-            setProgressItems((prev) => {
-              const truncated = event.text.length > 150
-                ? event.text.slice(0, 147) + "…"
-                : event.text;
-              return [...prev, truncated];
-            });
-          } else if (event.type === "result") {
-            setReport(event.text);
-            setStatus("done");
-            setSidebarRefresh((n) => n + 1); // refresh sidebar
-          } else if (event.type === "error") {
-            setErrorText(event.text);
-            setStatus("error");
-          }
-        }
-      }
-    } catch (err) {
-      setErrorText(err instanceof Error ? err.message : String(err));
-      setStatus("error");
-    }
+  function openProduct(product: ProductRef) {
+    setSelectedProduct(product);
+    setView("product");
   }
 
-  async function loadAnalysis(id: string) {
-    setSelectedId(id);
-    setStatus("idle");
-    setProgressItems([]);
-    setErrorText("");
-    setReport("");
-
-    try {
-      const res = await fetch(`${API_URL}/analyses/${id}`);
-      const { data } = await res.json();
-      if (data) {
-        setReport(data.report_markdown);
-        setReportProductName(data.product_name);
-        setStatus("done");
-      }
-    } catch {
-      // silently ignore
-    }
+  function goHome() {
+    setView("home");
+    setSelectedProduct(null);
   }
 
-  function handleNewAnalysis() {
-    setSelectedId(null);
-    setStatus("idle");
-    setReport("");
-    setProgressItems([]);
-    setErrorText("");
+  function handleCategorySelect(cat: string) {
+    setSelectedCategory(cat);
+    setView("home");
+    setSelectedProduct(null);
+  }
+
+  function handleJobStart(productId: string, productName: string, type: "discovery" | "analysis") {
+    setRunningJobs(prev => {
+      const filtered = prev.filter(j => j.productId !== productId);
+      return [...filtered, { productId, productName, type }];
+    });
+  }
+
+  function handleJobEnd(productId: string) {
+    setRunningJobs(prev => prev.filter(j => j.productId !== productId));
+    setProductListRefresh(n => n + 1);
+  }
+
+  function handleProductUpdated(id: string, name: string, description: string) {
+    if (selectedProduct?.id === id) {
+      setSelectedProduct(prev => prev ? { ...prev, name, description } : prev);
+    }
+    setProductListRefresh(n => n + 1);
+  }
+
+  function handleProductDeleted(id: string) {
+    handleJobEnd(id);
+    setProductListRefresh(n => n + 1);
+  }
+
+  function goToProduct(productId: string) {
+    // If the job's product is already selected, just switch to it
+    if (selectedProduct?.id === productId) {
+      setView("product");
+    }
+    // Otherwise we'd need the full product info — just navigate home so user can click it
+    // This is a graceful fallback; the banner is most useful when staying on the same product page
+  }
+
+  if (authLoading) {
+    return (
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        color: "var(--gray-500)",
+        gap: "0.75rem",
+      }}>
+        <div className="spinner" />
+        Loading…
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginPage />;
   }
 
   return (
     <div className="app-layout">
-      <HistorySidebar
-        selectedId={selectedId}
-        onSelect={loadAnalysis}
-        onNewAnalysis={handleNewAnalysis}
-        refreshTrigger={sidebarRefresh}
+      <CategoryNav
+        selectedCategory={selectedCategory}
+        onSelectCategory={handleCategorySelect}
+        userEmail={session.user.email ?? ""}
       />
-
       <div className="app-main">
-        <header className="app-header">
-          <h1>Competitor Analysis Tool</h1>
-          <p>AI-powered competitive research for healthcare products</p>
-        </header>
-
-        <main>
-          {(status === "idle" || status === "running" || status === "error") && (
-            <div className="card">
-              <AnalysisForm
-                productName={productName}
-                productDescription={productDescription}
-                maxCompetitors={maxCompetitors}
-                onProductNameChange={setProductName}
-                onProductDescriptionChange={setProductDescription}
-                onMaxCompetitorsChange={setMaxCompetitors}
-                onSubmit={startAnalysis}
-                disabled={status === "running"}
-              />
-
-              {status === "running" && (
-                <div className="progress-section">
-                  <div className="status-bar running">
-                    <div className="spinner" />
-                    <span>Researching competitors — this takes 5–10 minutes…</span>
-                  </div>
-                  <ResearchPhases items={progressItems} />
-                </div>
-              )}
-
-              {status === "error" && (
-                <div className="status-bar error" style={{ marginTop: "1rem" }}>
-                  <strong>Error:</strong>&nbsp;{errorText}
-                </div>
-              )}
-            </div>
-          )}
-
-          {status === "done" && report && (
-            <>
-              {selectedId === null && (
-                <button className="btn-secondary back-btn" onClick={handleNewAnalysis}>
-                  ← New Analysis
-                </button>
-              )}
-              <ReportView productName={reportProductName} report={report} />
-            </>
-          )}
-        </main>
+        <RunningJobBanner jobs={runningJobs} onGoToProduct={goToProduct} />
+        {view === "home" && (
+          <ProductList
+            category={selectedCategory}
+            refresh={productListRefresh}
+            onOpenProduct={openProduct}
+            onProductCreated={() => setProductListRefresh(n => n + 1)}
+          />
+        )}
+        {view === "product" && selectedProduct && (
+          <ProductPage
+            productId={selectedProduct.id}
+            productName={selectedProduct.name}
+            productDescription={selectedProduct.description}
+            onBack={goHome}
+            onJobStart={handleJobStart}
+            onJobEnd={handleJobEnd}
+            onProductUpdated={handleProductUpdated}
+            onProductDeleted={handleProductDeleted}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,7 @@
 .env
+.env.*
+frontend/.env
+frontend/.env.*
 node_modules/
 dist/
 frontend/dist/

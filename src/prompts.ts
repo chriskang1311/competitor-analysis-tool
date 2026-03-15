@@ -1,3 +1,116 @@
+export function buildDiscoveryPrompt(
+  productName: string,
+  productDescription: string,
+  category: string
+): string {
+  return `You are a senior healthcare technology market analyst. Find the top 10 direct competitors for the following product.
+
+Product Name: ${productName}
+Description: ${productDescription}
+Category: ${category}
+
+Instructions:
+1. Search the web using queries like "best ${category} software healthcare", "top ${category} solutions", "${productName} alternatives", and check G2, Capterra, KLAS Research, and vendor websites.
+2. Only include direct competitors — same category, same buyers.
+3. For each competitor, find: product name, parent company, website URL, 2-3 sentence description, primary target user, and single most important key strength.
+4. Return ONLY valid JSON. No markdown, no prose, no code fences.
+5. Do not fabricate — if you cannot find 10, return fewer.
+
+Return EXACTLY this JSON structure:
+{
+  "competitors": [
+    {
+      "id": "unique-slug-lowercase-hyphenated",
+      "name": "Product Name",
+      "company": "Company Inc.",
+      "website": "https://example.com",
+      "description": "2-3 sentences about what the product does.",
+      "targetUser": "Who primarily uses this product.",
+      "keyStrength": "The single most important competitive advantage."
+    }
+  ]
+}`;
+}
+
+export function buildDeepAnalysisPrompt(
+  productName: string,
+  productDescription: string,
+  category: string,
+  competitors: Array<{ name: string; website: string; company: string }>
+): string {
+  const competitorList = competitors
+    .map(c => `- ${c.name} (${c.company}) — ${c.website}`)
+    .join("\n");
+  return `You are a senior healthcare technology market analyst. Produce a detailed feature comparison for these competitors in the ${category} space.
+
+Our product: ${productName} — ${productDescription}
+
+Competitors to research:
+${competitorList}
+
+Instructions:
+1. For each competitor, visit their website, check G2/Capterra/KLAS, and look for feature documentation.
+2. Identify 10-15 features/capabilities that are most meaningful and differentiating for the ${category} space. Use specific feature names, not generic categories.
+   Good: "Real-time 270/271 EDI Eligibility Checks"
+   Bad: "Customer Support"
+3. For each competitor and feature, assign exactly one value: "Yes", "Partial", "No", or "Unknown".
+4. Return ONLY valid JSON. No markdown, no prose, no code fences.
+
+Return EXACTLY this JSON structure:
+{
+  "features": ["Feature Name 1", "Feature Name 2"],
+  "competitors": [
+    {
+      "name": "Product Name",
+      "company": "Company Inc.",
+      "values": {
+        "Feature Name 1": "Yes",
+        "Feature Name 2": "No"
+      }
+    }
+  ]
+}`;
+}
+
+export function buildFeatureResearchPrompt(
+  productName: string,
+  productDescription: string,
+  category: string,
+  featuresToResearch: string[],
+  competitors: Array<{ name: string; website: string; company: string }>
+): string {
+  const featureList = featuresToResearch.map(f => `- ${f}`).join("\n");
+  const competitorList = competitors
+    .map(c => `- ${c.name} (${c.company}) — ${c.website}`)
+    .join("\n");
+  return `You are a senior healthcare technology market analyst. Research ONLY the following specific features for each competitor.
+
+Our product: ${productName} — ${productDescription}
+Category: ${category}
+
+Features to research (ONLY these, no others):
+${featureList}
+
+Competitors:
+${competitorList}
+
+Instructions:
+1. For each competitor and each listed feature, visit their website and check G2/Capterra/KLAS.
+2. For each feature assign exactly one: "Yes", "Partial", "No", or "Unknown".
+3. Return ONLY valid JSON. No markdown, no prose, no code fences.
+
+Return EXACTLY this structure (include ONLY the features listed above):
+{
+  "features": ["Feature Name"],
+  "competitors": [
+    {
+      "name": "Product Name",
+      "values": { "Feature Name": "Yes" }
+    }
+  ]
+}`;
+}
+
 export function buildAnalysisPrompt(
   productName: string,
   productDescription: string,

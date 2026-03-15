@@ -1,6 +1,9 @@
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { Request } from "express";
+
 export interface SourceLink {
   url: string;
-  description: string; // 1-4 word label, e.g. "G2 reviews" or "pricing page"
+  description: string;
 }
 
 export interface CompetitorProfile {
@@ -20,4 +23,29 @@ export interface AnalysisResult {
 export interface AnalysisEvent {
   type: "progress" | "result" | "error";
   text: string;
+  data?: unknown;
+}
+
+export interface CompetitorCard {
+  id: string;
+  name: string;
+  company: string;
+  website: string;
+  description: string;
+  targetUser: string;
+  keyStrength: string;
+}
+
+export interface ComparisonTable {
+  features: string[];
+  competitors: Array<{
+    name: string;
+    company: string;
+    values: Record<string, string>;
+  }>;
+}
+
+export interface AuthRequest extends Request {
+  user: User;
+  db: SupabaseClient;
 }
