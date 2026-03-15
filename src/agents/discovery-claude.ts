@@ -1,0 +1,50 @@
+import { query } from "@anthropic-ai/claude-agent-sdk";
+import { buildDiscoveryPrompt } from "../prompts.js";
+import { DiscoveryResultSchema } from "../schemas.js";
+import type { CompetitorCard } from "../types.js";
+
+// Claude WebSearch agent — finds competitors independently with no Tavily seeding.
+// Intentionally uses no pre-fetched data so its results are fully independent
+// from the Tavily agent, enabling a meaningful consensus step.
+export async function runClaudeDiscovery(
+  productName: string,
+  productDescription: string,
+  category: string,
+  onProgress?: (text: string) => void
+): Promise<CompetitorCard[]> {
+  // No tavilyContext passed — agent searches from scratch
+  const prompt = buildDiscoveryPrompt(productName, productDescription, category);
+  let resultText = "";
+
+  for await (const event of query({
+    prompt,
+    options: {
+      model: "claude-sonnet-4-6",
+      maxTurns: 20,
+      tools: ["WebSearch", "WebFetch"],
+      allowedTools: ["WebSearch", "WebFetch"],
+    },
+  })) {
+    if (event.type === "assistant") {
+      for (const block of (event.message as any).content ?? []) {
+        if (block.type === "tool_use" && onProgress) {
+          const input = block.input as Record<string, string>;
+          if (block.name === "WebSearch") {
+            onProgress(`[Claude Agent] 🔍 ${input.query ?? ""}`);
+          } else if (block.name === "WebFetch") {
+            try { onProgress(`[Claude Agent] 🌐 ${new URL(input.url ?? "").hostname}`); }
+            catch { onProgress(`[Claude Agent] 🌐 ${input.url ?? ""}`); }
+          }
+        }
+      }
+    } else if (event.type === "result" && !(event as any).is_error) {
+      resultText = (event as any).result ?? "";
+    }
+  }
+
+  onProgress?.(`[Claude Agent] ✅ Done`);
+
+  const clean = resultText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
+  const parsed = DiscoveryResultSchema.parse(JSON.parse(clean));
+  return parsed.competitors;
+}

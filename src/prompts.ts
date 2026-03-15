@@ -148,6 +148,116 @@ Return ONLY valid JSON in this exact format (no markdown, no prose):
 }`;
 }
 
+// ── Tavily-only discovery prompt ─────────────────────────────────
+
+export function buildTavilyDiscoveryPrompt(
+  productName: string,
+  productDescription: string,
+  category: string,
+  tavilyContext: string
+): string {
+  return `You are a healthcare technology competitive intelligence analyst. Your task is to identify direct competitors to the product described below.
+
+IMPORTANT: You do NOT have access to a web browser. Work ONLY from the pre-fetched search results provided below. Do not attempt to search the web.
+
+PRODUCT: ${productName}
+DESCRIPTION: ${productDescription}
+CATEGORY: ${category}
+
+PRE-FETCHED SEARCH RESULTS:
+${tavilyContext}
+
+INSTRUCTIONS:
+1. Read every search result above carefully
+2. Extract every product or platform mentioned that is a direct competitor to ${productName}
+3. A competitor must be: same category (${category}), same buyer (health systems, hospitals, or physician groups)
+4. Do NOT include: consulting firms, staffing agencies, or tangentially related products
+5. For each competitor, extract or infer from the search results:
+   - A unique slug ID (lowercase, hyphenated, e.g. "waystar-rcm")
+   - Product name
+   - Parent company name
+   - Website URL (pull from the search results — do not guess)
+   - 2-3 sentence description of what it does
+   - Primary target user
+   - Single most important competitive differentiator
+
+Return ONLY valid JSON in this exact format (no markdown, no prose):
+{
+  "competitors": [
+    {
+      "id": "unique-slug",
+      "name": "Product Name",
+      "company": "Company Inc.",
+      "website": "https://example.com",
+      "description": "What it does in 2-3 sentences.",
+      "targetUser": "Who uses it.",
+      "keyStrength": "Its single most important advantage."
+    }
+  ]
+}`;
+}
+
+// ── Consensus prompt ──────────────────────────────────────────────
+
+export function buildConsensusPrompt(
+  productName: string,
+  category: string,
+  claudeList: CompetitorCard[],
+  tavilyList: CompetitorCard[]
+): string {
+  const claudeJson = JSON.stringify(claudeList, null, 2);
+  const tavilyJson = JSON.stringify(tavilyList, null, 2);
+
+  // Find name overlaps to surface in the prompt
+  const claudeNames = new Set(claudeList.map(c => c.name.toLowerCase()));
+  const tavilyNames = new Set(tavilyList.map(c => c.name.toLowerCase()));
+  const overlap = claudeList
+    .filter(c => tavilyNames.has(c.name.toLowerCase()))
+    .map(c => c.name);
+  const onlyInClaude = claudeList
+    .filter(c => !tavilyNames.has(c.name.toLowerCase()))
+    .map(c => c.name);
+  const onlyInTavily = tavilyList
+    .filter(c => !claudeNames.has(c.name.toLowerCase()))
+    .map(c => c.name);
+
+  return `You are a senior healthcare technology analyst. Two independent research agents searched for competitors to ${productName} in the ${category} category. They worked separately and produced different lists. Your job is to review both lists and produce a final authoritative top 10.
+
+AGENT A — Claude WebSearch Agent found ${claudeList.length} competitors:
+${claudeJson}
+
+AGENT B — Tavily Search Agent found ${tavilyList.length} competitors:
+${tavilyJson}
+
+OVERLAP ANALYSIS (pre-computed to help you):
+- Found by BOTH agents (high confidence): ${overlap.length > 0 ? overlap.join(", ") : "none detected"}
+- Found only by Agent A (Claude): ${onlyInClaude.length > 0 ? onlyInClaude.join(", ") : "none"}
+- Found only by Agent B (Tavily): ${onlyInTavily.length > 0 ? onlyInTavily.join(", ") : "none"}
+
+CONSENSUS RULES:
+1. Competitors found by BOTH agents are high-confidence — include them unless there is a clear reason not to
+2. Competitors found by only one agent require more judgment — include them only if they are clearly a direct ${category} competitor to ${productName}
+3. If both agents found the same company but with slightly different details (name, website, description), merge them using the most accurate and specific information from either source
+4. You may add 1-2 obvious competitors that BOTH agents missed, if you are confident they belong
+5. Rank by strategic importance — the most direct, highest-stakes competitors come first
+6. Output exactly 10 competitors
+
+Return ONLY valid JSON in this exact format (no markdown, no prose):
+{
+  "competitors": [
+    {
+      "id": "unique-slug",
+      "name": "Product Name",
+      "company": "Company Inc.",
+      "website": "https://example.com",
+      "description": "What it does in 2-3 sentences.",
+      "targetUser": "Who uses it.",
+      "keyStrength": "Its single most important advantage."
+    }
+  ]
+}`;
+}
+
 // ── Validator prompt ─────────────────────────────────────────────
 
 export function buildValidatorPrompt(
