@@ -1,6 +1,8 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { buildDiscoveryPrompt } from "../prompts.js";
 import { DiscoveryResultSchema } from "../schemas.js";
+import { extractJson } from "../lib/extract-json.js";
+import { withRetry } from "../lib/retry.js";
 import type { CompetitorCard } from "../types.js";
 
 // Claude WebSearch agent — finds competitors independently with no Tavily seeding.
@@ -10,10 +12,25 @@ export async function runClaudeDiscovery(
   productName: string,
   productDescription: string,
   category: string,
-  onProgress?: (text: string) => void
+  onProgress?: (text: string) => void,
+  segment?: string
+): Promise<CompetitorCard[]> {
+  return withRetry(
+    () => _runClaudeDiscovery(productName, productDescription, category, onProgress, segment),
+    3,
+    "Claude Discovery"
+  );
+}
+
+async function _runClaudeDiscovery(
+  productName: string,
+  productDescription: string,
+  category: string,
+  onProgress?: (text: string) => void,
+  segment?: string
 ): Promise<CompetitorCard[]> {
   // No tavilyContext passed — agent searches from scratch
-  const prompt = buildDiscoveryPrompt(productName, productDescription, category);
+  const prompt = buildDiscoveryPrompt(productName, productDescription, category, undefined, segment);
   let resultText = "";
 
   for await (const event of query({
@@ -44,7 +61,6 @@ export async function runClaudeDiscovery(
 
   onProgress?.(`[Claude Agent] ✅ Done`);
 
-  const clean = resultText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
-  const parsed = DiscoveryResultSchema.parse(JSON.parse(clean));
+  const parsed = DiscoveryResultSchema.parse(JSON.parse(extractJson(resultText)));
   return parsed.competitors;
 }

@@ -1,28 +1,81 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { buildTavilyDiscoveryPrompt } from "../prompts.js";
 import { DiscoveryResultSchema } from "../schemas.js";
-import { tavilyMultiSearch } from "../lib/tavily.js";
+import { tavilyTieredSearch } from "../lib/tavily.js";
+import { extractJson } from "../lib/extract-json.js";
+import { withRetry } from "../lib/retry.js";
 import type { CompetitorCard } from "../types.js";
 
 export async function runTavilyDiscovery(
   productName: string,
   productDescription: string,
   category: string,
-  onProgress?: (text: string) => void
+  onProgress?: (text: string) => void,
+  segment?: string
+): Promise<CompetitorCard[]> {
+  return withRetry(
+    () => _runTavilyDiscovery(productName, productDescription, category, onProgress, segment),
+    3,
+    "Tavily Discovery"
+  );
+}
+
+async function _runTavilyDiscovery(
+  productName: string,
+  productDescription: string,
+  category: string,
+  onProgress?: (text: string) => void,
+  segment?: string
 ): Promise<CompetitorCard[]> {
   onProgress?.(`[Tavily Agent] 🌐 Fetching search results…`);
 
-  // Run 5 targeted searches from different angles
-  const tavilyContext = await tavilyMultiSearch(
-    [
-      `top ${category} healthcare software vendors 2024 2025`,
-      `${productName} alternatives competitors`,
-      `best ${category} solutions KLAS ratings`,
-      `${category} healthcare software G2 top rated`,
-      `${productName} vs competitors comparison`,
-    ],
-    7
-  );
+  const currentYear = new Date().getFullYear();
+
+  // Tier 1 — recent news queries (will be filtered to last 90 days)
+  const recentQueries: string[] =
+    segment === "enterprise"
+      ? [
+          `${productName} enterprise competitor news ${currentYear}`,
+          `${category} healthcare enterprise software acquisition funding ${currentYear}`,
+          `${category} large vendor product launch announcement ${currentYear}`,
+        ]
+      : segment === "startup"
+      ? [
+          `${category} healthcare startup funding ${currentYear}`,
+          `${productName} startup competitor news ${currentYear}`,
+          `${category} healthcare new company launch ${currentYear}`,
+        ]
+      : [
+          `${productName} competitor news ${currentYear}`,
+          `${category} healthcare software company news ${currentYear}`,
+          `${category} vendor product launch funding ${currentYear}`,
+        ];
+
+  // Tier 2 — evergreen product queries (no date filter — captures reviews, rankings, feature info)
+  const evergreenQueries: string[] =
+    segment === "enterprise"
+      ? [
+          `top ${category} healthcare enterprise software vendors`,
+          `${productName} alternatives enterprise competitors`,
+          `best ${category} solutions KLAS ratings large health systems`,
+          `${category} healthcare software publicly traded companies`,
+        ]
+      : segment === "startup"
+      ? [
+          `${category} healthcare startup companies emerging`,
+          `${productName} startup alternatives competitors`,
+          `${category} healthcare software seed Series A Series B funded`,
+          `new ${category} healthcare technology companies venture funded`,
+        ]
+      : [
+          `top ${category} healthcare software vendors`,
+          `${productName} alternatives competitors`,
+          `best ${category} solutions KLAS ratings`,
+          `${category} healthcare software G2 top rated`,
+        ];
+
+  // Run tiered searches — recent queries filtered to 90 days, evergreen unrestricted
+  const tavilyContext = await tavilyTieredSearch(recentQueries, evergreenQueries, 6);
 
   if (!tavilyContext) {
     onProgress?.(`[Tavily Agent] ⚠️  No results returned — agent will produce empty list`);
@@ -34,7 +87,8 @@ export async function runTavilyDiscovery(
     productName,
     productDescription,
     category,
-    tavilyContext
+    tavilyContext,
+    segment
   );
 
   let resultText = "";
@@ -57,7 +111,6 @@ export async function runTavilyDiscovery(
 
   onProgress?.(`[Tavily Agent] ✅ Done`);
 
-  const clean = resultText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
-  const parsed = DiscoveryResultSchema.parse(JSON.parse(clean));
+  const parsed = DiscoveryResultSchema.parse(JSON.parse(extractJson(resultText)));
   return parsed.competitors;
 }

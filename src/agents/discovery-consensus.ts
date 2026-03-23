@@ -1,6 +1,7 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { buildConsensusPrompt } from "../prompts.js";
 import { DiscoveryResultSchema } from "../schemas.js";
+import { extractJson } from "../lib/extract-json.js";
 import type { CompetitorCard } from "../types.js";
 
 export async function runConsensus(
@@ -8,7 +9,8 @@ export async function runConsensus(
   category: string,
   claudeList: CompetitorCard[],
   tavilyList: CompetitorCard[],
-  onProgress?: (text: string) => void
+  onProgress?: (text: string) => void,
+  segment?: string
 ): Promise<CompetitorCard[]> {
   // Log what the two agents found before consensus
   const claudeNames = new Set(claudeList.map(c => c.name.toLowerCase()));
@@ -18,7 +20,7 @@ export async function runConsensus(
   onProgress?.(`[Consensus Agent] 📊 Claude found ${claudeList.length}, Tavily found ${tavilyList.length} — ${overlapCount} overlap`);
   onProgress?.(`[Consensus Agent] 🤝 Reconciling lists into final top 10…`);
 
-  const prompt = buildConsensusPrompt(productName, category, claudeList, tavilyList);
+  const prompt = buildConsensusPrompt(productName, category, claudeList, tavilyList, segment);
   let resultText = "";
 
   // No web tools — consensus is a pure reasoning task over the two lists
@@ -37,7 +39,6 @@ export async function runConsensus(
 
   onProgress?.(`[Consensus Agent] ✅ Final list agreed`);
 
-  const clean = resultText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
-  const parsed = DiscoveryResultSchema.parse(JSON.parse(clean));
+  const parsed = DiscoveryResultSchema.parse(JSON.parse(extractJson(resultText)));
   return parsed.competitors;
 }

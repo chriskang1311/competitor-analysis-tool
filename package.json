@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "analyze": "node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts",
+    "discover": "node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts --phase discover",
     "build": "tsc",
     "start": "node dist/orchestrate.js"
   },

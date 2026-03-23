@@ -25,12 +25,22 @@ export interface Evidence {
   url: string;
 }
 
+export interface CompetitorSource {
+  type: "product-page" | "g2-reviews" | "klas-research" | "company-overview" | "news" | "blog" | "other";
+  url: string;
+}
+
 export interface CompetitorAnalysis {
   id: string;
   name: string;
   company: string;
   values: Record<string, string>;
+  descriptions: Record<string, string>;  // HOW each feature is supported (1-2 sentences)
   evidence: Evidence[];
+  competitorSources: CompetitorSource[];  // categorized source links per competitor
+  // Computed client-side after analysis; not produced by the LLM
+  evidenceCount?: number;
+  searchCoverage?: "full" | "partial" | "minimal";
 }
 
 export interface ComparisonTable {
@@ -38,11 +48,25 @@ export interface ComparisonTable {
   competitors: Array<{
     name: string;
     company: string;
+    targetCustomerProfile?: string;
+    deploymentGTMSummary?: string;
     values: Record<string, string>;
   }>;
 }
 
 // ── Synthesis report ─────────────────────────────────────────────
+
+export interface TableStake {
+  feature: string;
+  whyExpected: string;
+  supportedBy: string[];
+}
+
+export interface DifferentiationOpportunity {
+  opportunity: string;
+  gapDescription: string;
+  advantage: string;
+}
 
 export interface SynthesisReport {
   productName: string;
@@ -50,10 +74,12 @@ export interface SynthesisReport {
   generatedAt: string;
   executiveSummary: string[];
   topDifferentiators: Array<{ title: string; description: string }>;
-  tableStakes: string[];
-  whitespaceOpportunities: string[];
+  tableStakes: TableStake[];
+  differentiationOpportunities: DifferentiationOpportunity[];
   comparisonTable: ComparisonTable;
   sources: Array<{ competitor: string; feature: string; claim: string; url: string }>;
+  segment?: string;
+  featureSelectionRationale?: string;
 }
 
 // ── Session state ────────────────────────────────────────────────

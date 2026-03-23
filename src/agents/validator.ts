@@ -1,15 +1,32 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { buildValidatorPrompt } from "../prompts.js";
 import { ValidatorResultSchema } from "../schemas.js";
+import { extractJson } from "../lib/extract-json.js";
+import { withRetry } from "../lib/retry.js";
 import type { CompetitorCard, ValidatedCompetitor } from "../types.js";
 
 export async function runValidator(
   productName: string,
   category: string,
   competitors: CompetitorCard[],
-  onProgress?: (text: string) => void
+  onProgress?: (text: string) => void,
+  segment?: string
 ): Promise<ValidatedCompetitor[]> {
-  const prompt = buildValidatorPrompt(productName, category, competitors);
+  return withRetry(
+    () => _runValidator(productName, category, competitors, onProgress, segment),
+    3,
+    "Validator"
+  );
+}
+
+async function _runValidator(
+  productName: string,
+  category: string,
+  competitors: CompetitorCard[],
+  onProgress?: (text: string) => void,
+  segment?: string
+): Promise<ValidatedCompetitor[]> {
+  const prompt = buildValidatorPrompt(productName, category, competitors, segment);
   let resultText = "";
 
   for await (const event of query({
@@ -38,7 +55,6 @@ export async function runValidator(
     }
   }
 
-  const clean = resultText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
-  const parsed = ValidatorResultSchema.parse(JSON.parse(clean));
+  const parsed = ValidatorResultSchema.parse(JSON.parse(extractJson(resultText)));
   return parsed.competitors;
 }

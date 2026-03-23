@@ -43,7 +43,6 @@ When the user mentions a product, identify which category it belongs to. If uncl
 
 ### Step 1 — Collect Information
 Before running anything, make sure you have:
-- **Product name** (e.g. "Epic MyChart")
 - **Product description** (1-3 sentences about what it does and who uses it)
 - **Category** (one of the 7 IDs above)
 
@@ -53,7 +52,6 @@ If the user hasn't provided all three, ask for them before proceeding.
 ```bash
 node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts \
   --phase discover \
-  --name "PRODUCT NAME" \
   --description "PRODUCT DESCRIPTION" \
   --category "CATEGORY-ID"
 ```
