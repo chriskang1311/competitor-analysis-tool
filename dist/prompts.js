@@ -1,150 +1,134 @@
-import type { CompetitorCard, ValidatedCompetitor, CompetitorAnalysis } from "./types.js";
-
 // ── Category feature hints ───────────────────────────────────────
-
-export const CATEGORY_FEATURE_HINTS: Record<string, string[]> = {
-  "revenue-cycle-management": [
-    "Real-time 270/271 EDI Eligibility Verification",
-    "Automated Prior Authorization",
-    "Claims Scrubbing & Editing",
-    "Denial Management & Appeals Workflow",
-    "Payment Posting Automation",
-    "Patient Responsibility Estimation",
-    "EHR/PM System Integrations",
-    "Clearinghouse Connectivity",
-    "Analytics & Reporting Dashboard",
-    "AI-Powered Coding Assistance",
-    "Contract Management & Modeling",
-    "Collections & Bad Debt Management",
-  ],
-  "contracting-strategy-yield": [
-    "Payer Contract Modeling & Simulation",
-    "Rate Benchmarking vs. Market",
-    "Contract Performance Analytics",
-    "Underpayment Detection",
-    "Value-Based Care Contract Support",
-    "Multi-Site / Health System Support",
-    "Negotiation Playbook Generation",
-    "Real-Time Remittance Analysis",
-    "Custom Fee Schedule Management",
-    "Integration with EHR/PM Systems",
-  ],
-  "supply-chain-pharmacy": [
-    "340B Program Management",
-    "Drug Diversion Detection",
-    "Automated Medication Dispensing",
-    "Inventory Optimization & Forecasting",
-    "GPO Contract Management",
-    "Clinical Decision Support (Formulary)",
-    "EHR Integration (CPOE)",
-    "Regulatory Compliance Reporting",
-    "Sterile Compounding Support",
-    "Controlled Substance Tracking (DEA)",
-    "Specialty Pharmacy Management",
-  ],
-  "care-model-operations": [
-    "Population Health Management",
-    "Care Coordination Workflows",
-    "Risk Stratification & Attribution",
-    "Chronic Disease Management Programs",
-    "Care Gap Identification & Closure",
-    "Social Determinants of Health (SDOH) Screening",
-    "Transitional Care Management",
-    "Utilization Management",
-    "Quality Measure Tracking (HEDIS, Stars)",
-    "EHR Integration & Data Ingestion",
-    "Provider Network Management",
-  ],
-  "clinical-decision-support": [
-    "Evidence-Based Order Sets",
-    "Drug-Drug / Drug-Allergy Interaction Alerts",
-    "Sepsis Early Warning & Alerts",
-    "Predictive Analytics & Risk Scoring",
-    "Diagnostic Decision Support",
-    "Antimicrobial Stewardship",
-    "Clinical Documentation Improvement (CDI)",
-    "Real-Time Surveillance & Outbreak Detection",
-    "Integration with EHR Workflow",
-    "Custom Alert Authoring",
-    "Regulatory & Quality Measure Alignment",
-  ],
-  "patient-engagement": [
-    "Patient Portal (Scheduling, Messaging, Results)",
-    "Mobile App (iOS + Android)",
-    "Automated Appointment Reminders (SMS/Email/Voice)",
-    "Online Bill Pay",
-    "Telehealth / Virtual Visit Integration",
-    "Post-Visit Surveys & CAHPS",
-    "Patient Education Content Library",
-    "Secure Messaging with Care Team",
-    "EHR Integration & Single Sign-On",
-    "Multilingual Support",
-    "Self-Service Check-In & Registration",
-    "Chronic Disease Remote Monitoring",
-  ],
-  "clinical-applications": [
-    "Specialty-Specific Workflow Support",
-    "CPOE & Clinical Documentation",
-    "Interoperability (HL7 FHIR, CDA)",
-    "Mobile / Tablet-First Design",
-    "AI-Assisted Diagnosis or Documentation",
-    "Regulatory Certification (ONC, HIPAA)",
-    "Patient Data & Imaging Integration",
-    "Real-Time Collaboration Tools",
-    "Custom Workflow Builder",
-    "Analytics & Outcome Tracking",
-    "Cloud-Based vs. On-Premise Deployment",
-  ],
-  "ai-healthcare-scheduling": [
-    "Epic Integration Depth (read-only / read-write / real-time bidirectional)",
-    "Epic Integration Method (App Orchard certified / native API / workaround-RPA-screen-scraping)",
-    "Autonomous Booking in Epic (book-modify-cancel without human confirmation)",
-    "Automation Level (fully autonomous / human-in-loop / configurable)",
-    "AI Copilot for Scheduling Staff (worker-facing, handles phone-in patients)",
-    "Inbound Patient Voice Agent (answers patient calls autonomously)",
-    "Outbound Patient Voice Agent (calls patients to schedule or remind)",
-    "Referral Intake & Batching (fax/electronic referral processing, scheduling worklist)",
-    "Guideline & Constraint Ingestion (PDFs, flowcharts, provider tables, visit types, insurance panels)",
-    "Self-Serve Configuration (vs. requires vendor implementation)",
-    "Deployment Model & Go-to-Market (standalone vs. EHR-dependent, implementation timeline, sales motion)",
-  ],
+export const CATEGORY_FEATURE_HINTS = {
+    "revenue-cycle-management": [
+        "Real-time 270/271 EDI Eligibility Verification",
+        "Automated Prior Authorization",
+        "Claims Scrubbing & Editing",
+        "Denial Management & Appeals Workflow",
+        "Payment Posting Automation",
+        "Patient Responsibility Estimation",
+        "EHR/PM System Integrations",
+        "Clearinghouse Connectivity",
+        "Analytics & Reporting Dashboard",
+        "AI-Powered Coding Assistance",
+        "Contract Management & Modeling",
+        "Collections & Bad Debt Management",
+    ],
+    "contracting-strategy-yield": [
+        "Payer Contract Modeling & Simulation",
+        "Rate Benchmarking vs. Market",
+        "Contract Performance Analytics",
+        "Underpayment Detection",
+        "Value-Based Care Contract Support",
+        "Multi-Site / Health System Support",
+        "Negotiation Playbook Generation",
+        "Real-Time Remittance Analysis",
+        "Custom Fee Schedule Management",
+        "Integration with EHR/PM Systems",
+    ],
+    "supply-chain-pharmacy": [
+        "340B Program Management",
+        "Drug Diversion Detection",
+        "Automated Medication Dispensing",
+        "Inventory Optimization & Forecasting",
+        "GPO Contract Management",
+        "Clinical Decision Support (Formulary)",
+        "EHR Integration (CPOE)",
+        "Regulatory Compliance Reporting",
+        "Sterile Compounding Support",
+        "Controlled Substance Tracking (DEA)",
+        "Specialty Pharmacy Management",
+    ],
+    "care-model-operations": [
+        "Population Health Management",
+        "Care Coordination Workflows",
+        "Risk Stratification & Attribution",
+        "Chronic Disease Management Programs",
+        "Care Gap Identification & Closure",
+        "Social Determinants of Health (SDOH) Screening",
+        "Transitional Care Management",
+        "Utilization Management",
+        "Quality Measure Tracking (HEDIS, Stars)",
+        "EHR Integration & Data Ingestion",
+        "Provider Network Management",
+    ],
+    "clinical-decision-support": [
+        "Evidence-Based Order Sets",
+        "Drug-Drug / Drug-Allergy Interaction Alerts",
+        "Sepsis Early Warning & Alerts",
+        "Predictive Analytics & Risk Scoring",
+        "Diagnostic Decision Support",
+        "Antimicrobial Stewardship",
+        "Clinical Documentation Improvement (CDI)",
+        "Real-Time Surveillance & Outbreak Detection",
+        "Integration with EHR Workflow",
+        "Custom Alert Authoring",
+        "Regulatory & Quality Measure Alignment",
+    ],
+    "patient-engagement": [
+        "Patient Portal (Scheduling, Messaging, Results)",
+        "Mobile App (iOS + Android)",
+        "Automated Appointment Reminders (SMS/Email/Voice)",
+        "Online Bill Pay",
+        "Telehealth / Virtual Visit Integration",
+        "Post-Visit Surveys & CAHPS",
+        "Patient Education Content Library",
+        "Secure Messaging with Care Team",
+        "EHR Integration & Single Sign-On",
+        "Multilingual Support",
+        "Self-Service Check-In & Registration",
+        "Chronic Disease Remote Monitoring",
+    ],
+    "clinical-applications": [
+        "Specialty-Specific Workflow Support",
+        "CPOE & Clinical Documentation",
+        "Interoperability (HL7 FHIR, CDA)",
+        "Mobile / Tablet-First Design",
+        "AI-Assisted Diagnosis or Documentation",
+        "Regulatory Certification (ONC, HIPAA)",
+        "Patient Data & Imaging Integration",
+        "Real-Time Collaboration Tools",
+        "Custom Workflow Builder",
+        "Analytics & Outcome Tracking",
+        "Cloud-Based vs. On-Premise Deployment",
+    ],
+    "ai-healthcare-scheduling": [
+        "Epic Integration Depth (read-only / read-write / real-time bidirectional)",
+        "Epic Integration Method (App Orchard certified / native API / workaround-RPA-screen-scraping)",
+        "Autonomous Booking in Epic (book-modify-cancel without human confirmation)",
+        "Automation Level (fully autonomous / human-in-loop / configurable)",
+        "AI Copilot for Scheduling Staff (worker-facing, handles phone-in patients)",
+        "Inbound Patient Voice Agent (answers patient calls autonomously)",
+        "Outbound Patient Voice Agent (calls patients to schedule or remind)",
+        "Referral Intake & Batching (fax/electronic referral processing, scheduling worklist)",
+        "Guideline & Constraint Ingestion (PDFs, flowcharts, provider tables, visit types, insurance panels)",
+        "Self-Serve Configuration (vs. requires vendor implementation)",
+        "Deployment Model & Go-to-Market (standalone vs. EHR-dependent, implementation timeline, sales motion)",
+    ],
 };
-
 // ── Segment language helper ───────────────────────────────────────
-
-function segmentFilter(segment?: string): string {
-  if (!segment) return "";
-  if (segment === "enterprise") {
-    return `\nSEGMENT FILTER — ENTERPRISE ONLY: Focus exclusively on established, mature vendors — publicly traded companies, private equity-backed firms, or companies with Series D+ funding, 200+ employees, and at least 5 years in the market. Exclude early-stage startups, companies founded after 2020, and companies with fewer than 50 employees.\n`;
-  }
-  if (segment === "startup") {
-    return `\nSEGMENT FILTER — STARTUPS ONLY: Focus exclusively on emerging, early-stage companies — startups founded within the last 7 years, seed through Series C funded, typically fewer than 200 employees. Exclude large established vendors, publicly traded companies, legacy EHR/HIS systems, and any company with more than 500 employees.\n`;
-  }
-  return `\nSEGMENT FILTER: ${segment}\n`;
+function segmentFilter(segment) {
+    if (!segment)
+        return "";
+    if (segment === "enterprise") {
+        return `\nSEGMENT FILTER — ENTERPRISE ONLY: Focus exclusively on established, mature vendors — publicly traded companies, private equity-backed firms, or companies with Series D+ funding, 200+ employees, and at least 5 years in the market. Exclude early-stage startups, companies founded after 2020, and companies with fewer than 50 employees.\n`;
+    }
+    if (segment === "startup") {
+        return `\nSEGMENT FILTER — STARTUPS ONLY: Focus exclusively on emerging, early-stage companies — startups founded within the last 7 years, seed through Series C funded, typically fewer than 200 employees. Exclude large established vendors, publicly traded companies, legacy EHR/HIS systems, and any company with more than 500 employees.\n`;
+    }
+    return `\nSEGMENT FILTER: ${segment}\n`;
 }
-
 // ── Discovery prompt ─────────────────────────────────────────────
-
-export function buildDiscoveryPrompt(
-  productName: string,
-  productDescription: string,
-  category: string,
-  tavilyContext?: string,
-  segment?: string
-): string {
-  const tavilySection = tavilyContext
-    ? `\nPRE-FETCHED SEARCH RESULTS (use these as your primary source — do not repeat these searches):\n${tavilyContext}\n`
-    : "";
-
-  const segmentSection = segmentFilter(segment);
-
-  const searchInstruction = tavilyContext
-    ? `1. The pre-fetched results above are your starting point — extract competitors from them first\n2. Use WebSearch only to fill gaps or verify details not covered above`
-    : `1. Search for competitors using queries like: "best ${category} software healthcare", "top ${category} solutions", "${productName} alternatives", "${category} vendors KLAS"\n2. Check G2, Capterra, KLAS Research, Black Book Research, and vendor websites`;
-
-  const currentYear = new Date().getFullYear();
-
-  return `You are a healthcare technology competitive intelligence analyst. Your task is to identify the top 10 direct competitors to the product described below.
+export function buildDiscoveryPrompt(productName, productDescription, category, tavilyContext, segment) {
+    const tavilySection = tavilyContext
+        ? `\nPRE-FETCHED SEARCH RESULTS (use these as your primary source — do not repeat these searches):\n${tavilyContext}\n`
+        : "";
+    const segmentSection = segmentFilter(segment);
+    const searchInstruction = tavilyContext
+        ? `1. The pre-fetched results above are your starting point — extract competitors from them first\n2. Use WebSearch only to fill gaps or verify details not covered above`
+        : `1. Search for competitors using queries like: "best ${category} software healthcare", "top ${category} solutions", "${productName} alternatives", "${category} vendors KLAS"\n2. Check G2, Capterra, KLAS Research, Black Book Research, and vendor websites`;
+    const currentYear = new Date().getFullYear();
+    return `You are a healthcare technology competitive intelligence analyst. Your task is to identify the top 10 direct competitors to the product described below.
 
 PRODUCT: ${productName}
 DESCRIPTION: ${productDescription}
@@ -181,19 +165,10 @@ Return ONLY valid JSON in this exact format (no markdown, no prose):
   ]
 }`;
 }
-
 // ── Tavily-only discovery prompt ─────────────────────────────────
-
-export function buildTavilyDiscoveryPrompt(
-  productName: string,
-  productDescription: string,
-  category: string,
-  tavilyContext: string,
-  segment?: string
-): string {
-  const segmentSection = segmentFilter(segment);
-
-  return `You are a healthcare technology competitive intelligence analyst. Your task is to identify direct competitors to the product described below.
+export function buildTavilyDiscoveryPrompt(productName, productDescription, category, tavilyContext, segment) {
+    const segmentSection = segmentFilter(segment);
+    return `You are a healthcare technology competitive intelligence analyst. Your task is to identify direct competitors to the product described below.
 
 IMPORTANT: You do NOT have access to a web browser. Work ONLY from the pre-fetched search results provided below. Do not attempt to search the web.
 
@@ -235,35 +210,24 @@ Return ONLY valid JSON in this exact format (no markdown, no prose):
   ]
 }`;
 }
-
 // ── Consensus prompt ──────────────────────────────────────────────
-
-export function buildConsensusPrompt(
-  productName: string,
-  category: string,
-  claudeList: CompetitorCard[],
-  tavilyList: CompetitorCard[],
-  segment?: string
-): string {
-  const claudeJson = JSON.stringify(claudeList, null, 2);
-  const tavilyJson = JSON.stringify(tavilyList, null, 2);
-
-  // Find name overlaps to surface in the prompt
-  const claudeNames = new Set(claudeList.map(c => c.name.toLowerCase()));
-  const tavilyNames = new Set(tavilyList.map(c => c.name.toLowerCase()));
-  const overlap = claudeList
-    .filter(c => tavilyNames.has(c.name.toLowerCase()))
-    .map(c => c.name);
-  const onlyInClaude = claudeList
-    .filter(c => !tavilyNames.has(c.name.toLowerCase()))
-    .map(c => c.name);
-  const onlyInTavily = tavilyList
-    .filter(c => !claudeNames.has(c.name.toLowerCase()))
-    .map(c => c.name);
-
-  const segmentSection = segmentFilter(segment);
-
-  return `You are a senior healthcare technology analyst. Two independent research agents searched for competitors to ${productName} in the ${category} category. They worked separately and produced different lists. Your job is to review both lists and produce a final authoritative top 10.
+export function buildConsensusPrompt(productName, category, claudeList, tavilyList, segment) {
+    const claudeJson = JSON.stringify(claudeList, null, 2);
+    const tavilyJson = JSON.stringify(tavilyList, null, 2);
+    // Find name overlaps to surface in the prompt
+    const claudeNames = new Set(claudeList.map(c => c.name.toLowerCase()));
+    const tavilyNames = new Set(tavilyList.map(c => c.name.toLowerCase()));
+    const overlap = claudeList
+        .filter(c => tavilyNames.has(c.name.toLowerCase()))
+        .map(c => c.name);
+    const onlyInClaude = claudeList
+        .filter(c => !tavilyNames.has(c.name.toLowerCase()))
+        .map(c => c.name);
+    const onlyInTavily = tavilyList
+        .filter(c => !claudeNames.has(c.name.toLowerCase()))
+        .map(c => c.name);
+    const segmentSection = segmentFilter(segment);
+    return `You are a senior healthcare technology analyst. Two independent research agents searched for competitors to ${productName} in the ${category} category. They worked separately and produced different lists. Your job is to review both lists and produce a final authoritative top 10.
 ${segmentSection}
 
 AGENT A — Claude WebSearch Agent found ${claudeList.length} competitors:
@@ -301,22 +265,13 @@ Return ONLY valid JSON in this exact format (no markdown, no prose):
   ]
 }`;
 }
-
 // ── Validator prompt ─────────────────────────────────────────────
-
-export function buildValidatorPrompt(
-  productName: string,
-  category: string,
-  competitors: CompetitorCard[],
-  segment?: string
-): string {
-  const competitorList = competitors
-    .map((c, i) => `${i + 1}. ${c.name} (${c.company}) — ${c.website}\n   ${c.description}`)
-    .join("\n\n");
-
-  const segmentSection = segmentFilter(segment);
-
-  return `You are a senior healthcare technology analyst tasked with validating and quality-scoring a list of competitors identified for ${productName} in the ${category} category.
+export function buildValidatorPrompt(productName, category, competitors, segment) {
+    const competitorList = competitors
+        .map((c, i) => `${i + 1}. ${c.name} (${c.company}) — ${c.website}\n   ${c.description}`)
+        .join("\n\n");
+    const segmentSection = segmentFilter(segment);
+    return `You are a senior healthcare technology analyst tasked with validating and quality-scoring a list of competitors identified for ${productName} in the ${category} category.
 ${segmentSection}
 
 DISCOVERED COMPETITORS:
@@ -358,37 +313,22 @@ Return ONLY valid JSON in this exact format (no markdown, no prose):
   ]
 }`;
 }
-
 // ── Single-competitor analysis prompt ────────────────────────────
-
-export function buildSingleCompetitorAnalysisPrompt(
-  productName: string,
-  category: string,
-  competitor: ValidatedCompetitor,
-  featureHints: string[],
-  tavilyContext?: string,
-  segment?: string
-): string {
-  const featureList = featureHints.map((f, i) => `${i + 1}. ${f}`).join("\n");
-
-  const tavilySection = tavilyContext
-    ? `\nPRE-FETCHED SEARCH RESULTS FOR ${competitor.name.toUpperCase()} (use these as your primary source):\n${tavilyContext}\n`
-    : "";
-
-  const searchInstruction = tavilyContext
-    ? `1. The pre-fetched results above are your primary source — extract feature evidence from them first\n2. Visit ${competitor.website} and use WebSearch only to fill gaps not covered above`
-    : `1. Visit ${competitor.website} — explore the product pages, feature lists, and integrations\n2. Search for "${competitor.name} features", "${competitor.name} ${category}", "${competitor.name} G2 reviews", "${competitor.name} KLAS"`;
-
-  const currentYear = new Date().getFullYear();
-
-  const segmentFocusHint =
-    segment === "enterprise"
-      ? `\nSEGMENT FOCUS — ENTERPRISE: When evaluating features, pay particular attention to: integration depth with major EHRs (Epic, Cerner, Oracle Health), multi-site / health system scalability, compliance certifications (SOC 2, HIPAA BAA, FedRAMP), enterprise SLA guarantees, and professional services / implementation support. These matter most to enterprise buyers.\n`
-      : segment === "startup"
-      ? `\nSEGMENT FOCUS — STARTUP: When evaluating features, pay particular attention to: ease and speed of deployment (time-to-value), self-serve configuration vs. professional services dependency, transparent pricing / usage-based models, modern API-first architecture, and product-led growth motion. These matter most to innovation-forward buyers evaluating emerging vendors.\n`
-      : "";
-
-  const schedulingGuidance = category === "ai-healthcare-scheduling" ? `
+export function buildSingleCompetitorAnalysisPrompt(productName, category, competitor, featureHints, tavilyContext, segment) {
+    const featureList = featureHints.map((f, i) => `${i + 1}. ${f}`).join("\n");
+    const tavilySection = tavilyContext
+        ? `\nPRE-FETCHED SEARCH RESULTS FOR ${competitor.name.toUpperCase()} (use these as your primary source):\n${tavilyContext}\n`
+        : "";
+    const searchInstruction = tavilyContext
+        ? `1. The pre-fetched results above are your primary source — extract feature evidence from them first\n2. Visit ${competitor.website} and use WebSearch only to fill gaps not covered above`
+        : `1. Visit ${competitor.website} — explore the product pages, feature lists, and integrations\n2. Search for "${competitor.name} features", "${competitor.name} ${category}", "${competitor.name} G2 reviews", "${competitor.name} KLAS"`;
+    const currentYear = new Date().getFullYear();
+    const segmentFocusHint = segment === "enterprise"
+        ? `\nSEGMENT FOCUS — ENTERPRISE: When evaluating features, pay particular attention to: integration depth with major EHRs (Epic, Cerner, Oracle Health), multi-site / health system scalability, compliance certifications (SOC 2, HIPAA BAA, FedRAMP), enterprise SLA guarantees, and professional services / implementation support. These matter most to enterprise buyers.\n`
+        : segment === "startup"
+            ? `\nSEGMENT FOCUS — STARTUP: When evaluating features, pay particular attention to: ease and speed of deployment (time-to-value), self-serve configuration vs. professional services dependency, transparent pricing / usage-based models, modern API-first architecture, and product-led growth motion. These matter most to innovation-forward buyers evaluating emerging vendors.\n`
+            : "";
+    const schedulingGuidance = category === "ai-healthcare-scheduling" ? `
 SCHEDULING CATEGORY GUIDANCE — apply these interpretations when evaluating each feature:
 - "Epic Integration Depth": Look for explicit vendor claims about read-only access (view schedules only), read-write (can book on behalf of a patient), or real-time bidirectional sync (two-way live updates). Check their Epic App Orchard listing if one exists.
 - "Epic Integration Method": Distinguish between (a) App Orchard certified — the vendor is listed at fhir.epic.com/Gallery; (b) native API — direct FHIR/HL7 connection but not App Orchard listed; (c) workaround — RPA, screen scraping, or browser automation against the Epic UI.
@@ -402,8 +342,7 @@ SCHEDULING CATEGORY GUIDANCE — apply these interpretations when evaluating eac
 - "Self-Serve Configuration": Can the customer configure the product themselves (scheduling rules, voice scripts, provider panels) through a UI, or does every change require the vendor's professional services team?
 - "Deployment Model & Go-to-Market": Is the product sold standalone (EHR-agnostic) or only as an add-on to a specific EHR? What is the typical go-live timeline? Is it sold direct enterprise, via EHR marketplace (e.g., Epic App Orchard), or through channel partners?
 ${segmentFilter(segment)}` : segmentFilter(segment) ? `\n${segmentFilter(segment)}` : "";
-
-  return `You are a healthcare technology analyst conducting a deep competitive analysis of ONE specific product.
+    return `You are a healthcare technology analyst conducting a deep competitive analysis of ONE specific product.
 
 YOUR SUBJECT: ${competitor.name} by ${competitor.company}
 WEBSITE: ${competitor.website}
@@ -464,65 +403,47 @@ For "competitorSources": collect the most important URLs you visited. Classify e
 - "blog": vendor blog post or case study
 - "other": any other relevant source`;
 }
-
 // ── Synthesis prompt ─────────────────────────────────────────────
-
-export function buildSynthesisPrompt(
-  productName: string,
-  productDescription: string,
-  category: string,
-  competitorAnalyses: CompetitorAnalysis[],
-  validatedCompetitors: ValidatedCompetitor[],
-  segment?: string
-): string {
-  const analysisJson = JSON.stringify(competitorAnalyses, null, 2);
-  const validatorJson = JSON.stringify(
-    validatedCompetitors.map(c => ({
-      name: c.name,
-      keyStrength: c.keyStrength,
-      targetUser: c.targetUser,
-      validatorNotes: c.validatorNotes,
-    })),
-    null, 2
-  );
-  const now = new Date().toISOString();
-
-  const segmentBlock = segment
-    ? `\nSEGMENT: ${segment}\n`
-    : "";
-
-  const segmentFraming = segment === "enterprise"
-    ? `\nFRAMING: This is the ENTERPRISE SEGMENT report. Frame all findings in terms of large health systems (200+ beds), integrated delivery networks (IDNs), academic medical centers, and enterprise physician groups. Competitors are evaluated as replacements or augmentations to existing call center / patient access center infrastructure. Buyers are Patient Access Directors and VPs of Operations at large health systems.\n`
-    : segment === "startup"
-    ? `\nFRAMING: This is the STARTUP SEGMENT report. Frame all findings in terms of AI-native scheduling vendors targeting mid-size health systems, specialty practices (orthopedics, cardiology, primary care), and ambulatory networks. Evaluate their ability to displace or co-exist with legacy patient access platforms. Buyers may be innovation-forward CMOs, COOs, or VP Patient Experience at mid-market health systems.\n`
-    : "";
-
-  const schedulingExtraOutputs = category === "ai-healthcare-scheduling" ? `
+export function buildSynthesisPrompt(productName, productDescription, category, competitorAnalyses, validatedCompetitors, segment) {
+    const analysisJson = JSON.stringify(competitorAnalyses, null, 2);
+    const validatorJson = JSON.stringify(validatedCompetitors.map(c => ({
+        name: c.name,
+        keyStrength: c.keyStrength,
+        targetUser: c.targetUser,
+        validatorNotes: c.validatorNotes,
+    })), null, 2);
+    const now = new Date().toISOString();
+    const segmentBlock = segment
+        ? `\nSEGMENT: ${segment}\n`
+        : "";
+    const segmentFraming = segment === "enterprise"
+        ? `\nFRAMING: This is the ENTERPRISE SEGMENT report. Frame all findings in terms of large health systems (200+ beds), integrated delivery networks (IDNs), academic medical centers, and enterprise physician groups. Competitors are evaluated as replacements or augmentations to existing call center / patient access center infrastructure. Buyers are Patient Access Directors and VPs of Operations at large health systems.\n`
+        : segment === "startup"
+            ? `\nFRAMING: This is the STARTUP SEGMENT report. Frame all findings in terms of AI-native scheduling vendors targeting mid-size health systems, specialty practices (orthopedics, cardiology, primary care), and ambulatory networks. Evaluate their ability to displace or co-exist with legacy patient access platforms. Buyers may be innovation-forward CMOs, COOs, or VP Patient Experience at mid-market health systems.\n`
+            : "";
+    const schedulingExtraOutputs = category === "ai-healthcare-scheduling" ? `
 7. featureSelectionRationale: A 3-5 sentence explanation of WHY these specific ≤12 features were chosen as the comparison dimensions for this segment. Note what other features were considered but excluded, and why. Write for a product strategy audience, not a technical one.
 8. For each competitor in comparisonTable, also populate:
    - targetCustomerProfile: Health system size, specialty focus, and typical buyer title — 1 concise sentence (e.g., "Large IDNs (500+ beds), horizontally focused, sold to VP Patient Access.")
    - deploymentGTMSummary: Standalone vs. EHR-dependent, typical go-live timeline, and primary sales motion — 1-2 sentences.
 ` : "";
-
-  const schedulingJsonAdditions = category === "ai-healthcare-scheduling" ? `
+    const schedulingJsonAdditions = category === "ai-healthcare-scheduling" ? `
   "featureSelectionRationale": "3-5 sentences explaining why these features were chosen and what was excluded.",
   "segment": "${segment ?? ""}",` : (segment ? `\n  "segment": "${segment}",` : "");
-
-  const competitorJsonExample = category === "ai-healthcare-scheduling"
-    ? `      {
+    const competitorJsonExample = category === "ai-healthcare-scheduling"
+        ? `      {
         "name": "Competitor Name",
         "company": "Company",
         "targetCustomerProfile": "Large IDNs, 500+ beds, VP Patient Access.",
         "deploymentGTMSummary": "EHR-agnostic standalone, 90-day implementation, direct enterprise sales.",
         "values": { "Feature 1": "Yes", "Feature 2": "No" }
       }`
-    : `      {
+        : `      {
         "name": "Competitor Name",
         "company": "Company",
         "values": { "Feature 1": "Yes", "Feature 2": "No" }
       }`;
-
-  return `You are a strategic analyst writing a competitive intelligence report for a product team.
+    return `You are a strategic analyst writing a competitive intelligence report for a product team.
 
 OUR PRODUCT: ${productName}
 DESCRIPTION: ${productDescription}

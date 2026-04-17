@@ -1,7 +1,4 @@
 .env
 .env.*
-node_modules/
-dist/
 reports/
-.trigger/
-*.js.map
+.DS_Store

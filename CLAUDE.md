@@ -1,145 +1,185 @@
-# Competitor Analysis Tool — Claude Code Instructions
+# Competitive Intelligence Tool — Claude Code Instructions
 
 ## What This Tool Does
-This is a multi-agent healthcare technology competitive intelligence tool. When a user asks you to analyze competitors for a product, you orchestrate a pipeline of specialist AI agents that:
 
-1. **Discover** the top competitors in the space (Discovery Agent)
-2. **Validate** and score each competitor with confidence ratings (Validator Agent)
-3. **Analyze** selected competitors in parallel — one dedicated agent per competitor (Analysis Agents)
-4. **Synthesize** a full report with citations (Synthesis Agent)
+This is a multi-agent competitive intelligence tool. Describe any B2B product and this tool will:
+1. **Discover** the top competitors in the market (Discovery + Validation teammates, parallel)
+2. **Analyze** selected competitors in depth — one dedicated teammate per competitor (parallel)
+3. **Synthesize** a full competitive report with a feature matrix, differentiation opportunities, and citations
 
-Results are saved to `reports/` as JSON + Markdown. Open `.md` files with `Ctrl+Shift+V` in VSCode for formatted preview.
+No category required. No CLI commands. Works for any B2B software market. Just describe the product.
+
+Results are saved to `reports/` as JSON + Markdown. Open `.md` files with `Cmd+Shift+V` in VSCode for formatted preview.
+
+---
+
+## Skills Available to All Agents
+
+Domain expertise lives in `.claude/skills/`. All teammates load these automatically:
+
+| Skill | Purpose |
+|---|---|
+| `competitor-discovery` | Search strategies for finding real B2B competitors |
+| `competitor-validation` | Confidence scoring rubric and top-5 selection criteria |
+| `feature-evaluation` | Yes/Partial/No/Unknown framework with evidence requirements |
+| `market-analysis` | Table stakes, differentiation gaps, strategic opportunity framing |
+| `source-management` | Citation format, source types, conflict handling |
+| `report-writing` | Structure and writing guide for every report section |
+| `research-playbook` | Step-by-step research workflow and gap-handling techniques |
 
 ---
 
 ## Triggering an Analysis
 
-Respond to any of these (and similar phrasings):
-- "Analyze competitors for [product]"
-- "Run competitor analysis on [product]"
-- "Research competitors for [product name]"
-- "Who are the competitors to [product]?"
-- "Do a competitive analysis of [market/product]"
+Respond to any of these phrasings:
+- "Analyze competitors for [product description]"
+- "Who competes with [product]?"
+- "Research competitors for [product]"
+- "Do a competitive analysis of [product]"
+- "Run a competitive analysis on [product]"
+
+**You only need a product description** — 1–3 sentences about what it does and who uses it. No category selection, no flags.
 
 ---
 
-## The 7 Healthcare Product Categories
+## Phase 1 — Discovery
 
-When the user mentions a product, identify which category it belongs to. If unclear, ask:
+### Create an Agent Team with 2 teammates running in parallel:
 
-| Category ID | Label |
-|---|---|
-| `revenue-cycle-management` | Revenue Cycle Management |
-| `contracting-strategy-yield` | Contracting Strategy & Yield |
-| `supply-chain-pharmacy` | Supply Chain & Pharmacy |
-| `care-model-operations` | Care Model Operations |
-| `clinical-decision-support` | Clinical Decision Support |
-| `patient-engagement` | Patient Engagement |
-| `clinical-applications` | Clinical Applications |
+**Discovery Teammate**
+- Infer the competitive category from the product description (per `research-playbook` and `competitor-discovery` skills)
+- Issue 4+ parallel searches in the first turn
+- Fetch G2 and Capterra category pages; follow promising leads
+- Return 10–15 candidate competitors as structured JSON with fields: `id`, `name`, `company`, `website`, `description`, `targetUser`, `keyStrength`
 
----
+**Validation Teammate**
+- Validate each candidate against the product's market (per `competitor-validation` skill)
+- Assign `confidence`: `"High"` | `"Medium"` | `"Low"`
+- Mark exactly 5 as `recommended: true`
+- Write `validatorNote` and `recommendationReason` for each
 
-## Step-by-Step Workflow
+### After Both Teammates Finish:
 
-### Step 1 — Collect Information
-Before running anything, make sure you have:
-- **Product description** (1-3 sentences about what it does and who uses it)
-- **Category** (one of the 7 IDs above)
+1. Generate a slug: `[product-name-slugified]-[YYYY-MM-DD]`
+2. Create the directory `reports/[slug]/`
+3. Write `reports/[slug]/session.json`:
+   ```json
+   {
+     "productName": "...",
+     "productDescription": "...",
+     "slug": "...",
+     "createdAt": "...",
+     "phase1Complete": true
+   }
+   ```
+4. Write `reports/[slug]/competitors.json` with the full validated competitor list
+5. Print a numbered list in this format:
+   ```
+     ★ 1. Competitor A (Company X) [High  ]
+          Direct competitor with identical buyer profile.
+          → Must-analyze because it leads the G2 category rankings.
 
-If the user hasn't provided all three, ask for them before proceeding.
+       2. Competitor B (Company Y) [Medium]
+          Overlaps on core features but targets a different segment.
+   ```
+6. Tell the user:
 
-### Step 2 — Run Phase 1: Discovery + Validation
-```bash
-node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts \
-  --phase discover \
-  --description "PRODUCT DESCRIPTION" \
-  --category "CATEGORY-ID"
-```
-
-This runs two agents sequentially:
-- **Discovery Agent** (~5 min): Finds top 10 competitors via web search
-- **Validator Agent** (~3 min): Scores each competitor and ★ marks the top 5
-
-The output will print a numbered list like:
-```
-  ★ 1. Competitor A (Company X) [High  ]
-     Direct competitor with identical buyer profile.
-     → Must-analyze because it leads the KLAS rankings in this space.
-
-    2. Competitor B (Company Y) [Medium]
-     Overlaps on 3 of 5 key features but targets a different buyer.
-```
-
-### Step 3 — Ask the User Which Competitors to Analyze
-After showing the list, tell the user:
-
-> "Discovery is complete. I found [N] competitors. The ★ starred ones are recommended by the validator. Which would you like to deep-analyze? You can say:
+> "Discovery complete. I found [N] competitors. The ★ starred ones are recommended. Which would you like to deep-analyze?
 > - **'use starred'** — analyze the ★ recommended ones
-> - **'1, 3, 5, 7'** — specify by number
+> - **'1, 3, 5'** — specify by number
 > - **'all'** — analyze all of them (slower)"
 
-### Step 4 — Run Phase 2: Deep Analysis + Synthesis
+---
 
-Once the user responds, run:
-```bash
-node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts \
-  --phase analyze \
-  --name "PRODUCT NAME" \
-  --description "PRODUCT DESCRIPTION" \
-  --category "CATEGORY-ID" \
-  --select "SELECTION" \
-  --session "reports/SLUG/session.json"
-```
+## Phase 2 — Analysis
 
-Replace `SELECTION` with:
-- `"starred"` if user said "use starred"
-- `"1,3,5"` if user gave numbers
-- `"all"` if user said all
+### Triggered by:
+- "Use starred" / "Continue with starred"
+- "Analyze 1, 3, 5" (numbers from the Phase 1 list)
+- "All"
+- "Continue from reports/[slug]/"
+- "Continue the analysis"
 
-The `--session` path uses the slug printed during Phase 1 (e.g. `reports/epic-mychart-2026-03-15/session.json`).
+### Setup:
+1. Read `reports/[slug]/session.json` and `reports/[slug]/competitors.json`
+2. Identify selected competitors (starred = `recommended: true`, or user-specified numbers)
+3. Confirm selection with user if ambiguous
 
-Analysis agents run **in parallel** — one per competitor — then the Synthesis Agent merges everything.
+### Create an Agent Team:
 
-### Step 5 — Show Results
-After Phase 2 completes, the terminal prints the executive summary. Relay it to the user in chat, then say:
+**One Analyzer Teammate per selected competitor (all run in parallel)**
 
-> "The full report is saved at `reports/[slug]/report.md`. Open it in VSCode and press `Ctrl+Shift+V` (Mac: `Cmd+Shift+V`) for the formatted feature matrix and citations."
+Each analyzer:
+- Is assigned exactly one competitor to research
+- Uses `feature-evaluation`, `source-management`, and `research-playbook` skills
+- Issues parallel searches for features, pricing, G2 profile, and recent news
+- Infers the relevant features to evaluate from the product description and what competitors highlight
+- Saves results to `reports/[slug]/competitor-[id].json` with structure:
+  ```json
+  {
+    "id": "...",
+    "name": "...",
+    "company": "...",
+    "targetCustomer": "...",
+    "deploymentModel": "...",
+    "features": {
+      "[featureName]": {
+        "value": "Yes | Partial | No | Unknown",
+        "description": "...",
+        "sourceUrl": "..."
+      }
+    },
+    "sources": [
+      { "url": "...", "type": "...", "title": "...", "accessedDate": "..." }
+    ]
+  }
+  ```
+
+**Synthesis Teammate (starts after analyzers complete)**
+
+- Reads all `reports/[slug]/competitor-[id].json` files
+- Reads `reports/[slug]/competitors.json` for validator notes
+- Applies `market-analysis` and `report-writing` skills
+- Writes `reports/[slug]/report.md` following the report-writing skill exactly
+
+### After All Complete:
+
+1. Print the executive summary from `report.md`
+2. Tell the user:
+
+> "Full report saved at `reports/[slug]/report.md`. Open it in VSCode and press `Cmd+Shift+V` for the formatted feature matrix and citations."
 
 ---
 
 ## Resuming a Previous Session
 
-If Phase 1 already ran, skip it by pointing to the existing session file:
-```bash
-node --env-file=.env node_modules/.bin/tsx src/orchestrate.ts \
-  --phase analyze \
-  --name "..." --description "..." --category "..." \
-  --select "starred" \
-  --session "reports/epic-mychart-2026-03-15/session.json"
-```
+If Phase 1 already ran, start Phase 2 directly:
+> "Continue from reports/[slug]/"
 
 List previous sessions:
-```bash
-ls reports/
-```
+> "List my previous analyses" → list contents of `reports/` directory
 
 ---
 
-## Environment Setup
+## Environment
 
 Requires `ANTHROPIC_API_KEY` in a `.env` file at the project root:
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
+Optional (improves discovery with pre-fetched search context):
+```
+TAVILY_API_KEY=tvly-...
+```
+
 ---
 
 ## Troubleshooting
 
-| Error | Fix |
+| Issue | Fix |
 |---|---|
-| `Missing required argument` | Ensure `--phase`, `--name`, `--description`, `--category` are all provided |
-| `Cannot find module` | Run `npm install` in the project root |
-| `ANTHROPIC_API_KEY` error | Check `.env` exists with a valid key |
-| `Run --phase discover first` | Phase 1 hasn't completed — run discover before analyze |
-| JSON parse error | AI returned malformed JSON — retry the same command |
+| Team doesn't spin up | Ensure `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set in `.claude/settings.json` |
+| Teammates can't find competitors | Try a more specific product description with the buyer role and core problem |
+| Report missing sections | Ask the synthesis teammate to re-read the `report-writing` skill and regenerate |
+| Session files missing | Check `reports/` directory; if empty, re-run Phase 1 |
