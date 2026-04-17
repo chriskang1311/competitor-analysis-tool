@@ -161,20 +161,6 @@ List previous sessions:
 
 ---
 
-## Environment
-
-Requires `ANTHROPIC_API_KEY` in a `.env` file at the project root:
-```
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-Optional (improves discovery with pre-fetched search context):
-```
-TAVILY_API_KEY=tvly-...
-```
-
----
-
 ## Troubleshooting
 
 | Issue | Fix |
