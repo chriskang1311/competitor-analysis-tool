@@ -6,41 +6,65 @@ user-invocable: false
 
 # Market Analysis Methodology
 
-## Table Stakes
-Features present in **≥70% of competitors** are table stakes. Buyers assume these exist — they don't win deals, but their absence loses them.
+## Coverage Tiers (Use These Thresholds Consistently)
+For each feature in the canonical list, calculate: (number of competitors with Yes or Partial) ÷ (total competitors analyzed).
 
-For each table-stakes item, identify:
-- **WHY it's expected**: what buyer need or industry norm created this expectation
-- **WHO provides it**: comma-separated list of competitors that offer it
+| Coverage | Label | Meaning | Report section |
+|---|---|---|---|
+| ≥70% | 🟢 Table stake | Buyers assume this exists | Section 5: Table Stakes |
+| 40–69% | 🟡 Contested | Leaders have it, others don't | Section 6: Contested Features |
+| <40% | 🔴 Differentiator | Rare — potential whitespace | Section 7: Differentiation Opportunities |
+
+Apply thresholds to every feature. No feature falls outside these three tiers.
+
+**Exception:** If fewer than 2 features qualify as table stakes (🟢), lower the table-stakes threshold to ≥50% for this report and note it.
+
+## Table Stakes
+Features at ≥70% coverage. These are baseline expectations — their absence loses deals.
+
+For each:
+- **WHY expected**: what buyer need or market norm created this expectation
+- **WHO provides it**: list competitors with Yes or Partial
+
+## Contested Features
+Features at 40–69% coverage. These separate leaders from laggards and are worth watching.
+
+For each:
+- Who has it and who doesn't
+- Why adoption is partial (high implementation cost? recent addition? enterprise-only?)
 
 ## Differentiation Opportunities
-Features where **0–1 competitors** excel are potential whitespace. These are opportunities to own a capability that buyers want but can't get well anywhere else.
+Features at <40% coverage where 0–1 competitors excel. These are potential whitespace.
+
+**How many to include:** All features below 40%. If more than 6 qualify, rank by buyer impact and include the top 6. Do not artificially limit to fewer than 3 if they exist.
 
 For each opportunity:
-- Name the gap specifically (not "better UX" — say "self-serve onboarding without implementation services")
-- State the **buyer pain** it addresses
-- Write a 1-sentence **advantage statement** grounded in the product's description: what the product being analyzed can credibly claim
+- **Gap**: what competitors lack — be specific (not "better UX", say "self-serve configuration without implementation services")
+- **Buyer pain**: what problem this gap creates for buyers today
+- **Advantage statement**: one sentence grounded in the product's description — what it can credibly claim
 
 ## Key Market Differentiators
-Identify the **3 most strategically important** competitive edges in this market, ranked by:
-1. **Buyer priority** — does this matter most to the buyer's decision?
-2. **Competitive gap** — are most competitors weak here?
-3. **Defensibility** — would this be hard to copy quickly?
+The 3 most strategically important competitive edges in this market, ranked by:
+1. **Buyer priority** — does this factor most in purchase decisions?
+2. **Competitive gap** — are most competitors genuinely weak here?
+3. **Defensibility** — would this be hard for competitors to copy quickly?
 
-For each differentiator: name + 2–3 sentence strategic description explaining why it matters in this market right now.
+For each: name + 2–3 sentences on why it matters right now.
 
-## Executive Summary Framing
-The executive summary should answer four questions in 4–6 sentences:
-1. What is the market doing right now? (consolidation? AI disruption? platform wars?)
-2. Who are the dominant players and what do they own?
-3. What is the key tension buyers face? (e.g., "best-of-breed point solutions vs. all-in-one platforms")
-4. What is the most important strategic takeaway for the product team?
-
-## Consolidation Signals to Watch
-Flag if you found evidence of:
+## Market Dynamics
+Research and flag if any of the following are found:
 - M&A activity in the last 12 months (acquisitions, mergers)
-- PE rollup strategies (private equity buying multiple point solutions)
-- Large platform players expanding into this adjacent space
-- Significant funding rounds that change the competitive dynamics
+- Significant funding rounds (>$20M) among competitors
+- Large platform players (Salesforce, Epic, Oracle, SAP, etc.) expanding into this adjacent space
+- Notable product pivots or category-defining launches
 
-Include these as a "Market Dynamics" note in the synthesis.
+For each finding: brief description + strategic significance. Include only confirmed facts — do not speculate.
+
+If none found: do not include a Market Dynamics section. Do not write "no significant dynamics found."
+
+## Executive Summary Frame
+Four questions, answered in 4–6 sentences total:
+1. What is the market direction? (consolidation / fragmentation / AI disruption / platform wars)
+2. Who are the dominant 2–3 players and what do they own?
+3. What is the key tension buyers face?
+4. What is the single most important strategic takeaway for the product team?
